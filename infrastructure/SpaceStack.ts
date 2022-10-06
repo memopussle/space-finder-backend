@@ -44,6 +44,11 @@ export class SpaceStack extends Stack {
     const helloLambdaIntergration = new LambdaIntegration(helloLambdaNodeJs); // link API Gateways and Lambda
     const helloLambdaResource = this.api.root.addResource('hello'); 
     helloLambdaResource.addMethod('GET', helloLambdaIntergration)
+  
+    //Spaces API intergrations:
+    const spaceResource = this.api.root.addResource('spaces');
+    spaceResource.addMethod('POST', this.spacesTable.createLambdaIntegration)
+  
   }
 }
 

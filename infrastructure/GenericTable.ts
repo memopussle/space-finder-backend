@@ -1,8 +1,8 @@
 import { Stack } from "aws-cdk-lib";
 import { AttributeType, Table } from "aws-cdk-lib/aws-dynamodb";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
-import {LambdaIntegration} from 'aws-cdk-lib/aws-apigateway';
-import { join } from 'path';
+import { LambdaIntegration } from "aws-cdk-lib/aws-apigateway";
+import { join } from "path";
 
 export interface TableProps {
   createLambdaPath?: string;
@@ -14,30 +14,31 @@ export interface TableProps {
 }
 
 export class GenericTable {
-
   private stack: Stack;
   private table: Table;
-  private props: TableProps
+  private props: TableProps;
 
   private createLambda: NodejsFunction | undefined;
   private readLambda: NodejsFunction | undefined;
   private updateLambda: NodejsFunction | undefined;
   private deleteLambda: NodejsFunction | undefined;
 
-  public createLambdaIntergration: LambdaIntegration;
-  public readLambdaIntergration: LambdaIntegration;
-  public updateLambdaIntergration: LambdaIntegration;
-  public deleteLambdaIntergration: LambdaIntegration;
+  public createLambdaIntegration: LambdaIntegration;
+  public readLambdaIntegration: LambdaIntegration;
+  public updateLambdaIntegration: LambdaIntegration;
+  public deleteLambdaIntegration: LambdaIntegration;
 
-  public constructor( stack: Stack, props: TableProps) {
-
+  public constructor(stack: Stack, props: TableProps) {
     this.stack = stack;
     this.props = props;
     this.initialize(); // create a table
   }
 
+  // make sure we initialize functions in order and organize our code
   private initialize() {
     this.createTable();
+    this.createLambdas(); // initialize lambdas and tables
+    this.grantTableRights();
   }
   private createTable() {
     this.table = new Table(this.stack, this.props.tableName, {
@@ -49,11 +50,57 @@ export class GenericTable {
     });
   }
 
+  private createLambdas() {
+    if (this.props.createLambdaPath) {
+      this.createLambda = this.createSingleLambda(this.props.createLambdaPath);
+      this.createLambdaIntegration = new LambdaIntegration(this.createLambda);
+    }
+    if (this.props.readLambdaPath) {
+      this.readLambda = this.createSingleLambda(this.props.readLambdaPath);
+      this.readLambdaIntegration = new LambdaIntegration(this.readLambda);
+    }
+    if (this.props.updateLambdaPath) {
+      this.updateLambda = this.createSingleLambda(this.props.updateLambdaPath);
+      this.updateLambdaIntegration = new LambdaIntegration(this.updateLambda);
+    }
+    if (this.props.deleteLambdaPath) {
+      this.deleteLambda = this.createSingleLambda(this.props.deleteLambdaPath);
+      this.deleteLambdaIntegration = new LambdaIntegration(this.deleteLambda);
+    }
+  }
+
+  // grant the rights to lambda to access tables
+  private grantTableRights() {
+    if (this.createLambda) {
+      this.table.grantWriteData(this.createLambda);
+    }
+    if (this.readLambda) {
+      this.table.grantReadData(this.readLambda);
+    }
+    if (this.updateLambda) {
+      this.table.grantWriteData(this.updateLambda);
+    }
+    if (this.deleteLambda) {
+      this.table.grantWriteData(this.deleteLambda);
+    }
+  }
+
   private createSingleLambda(lambdaName: string): NodejsFunction {
-    const lambdaId = `${this.props.tableName} ${lambdaName}`
+    const lambdaId = `${this.props.tableName} ${lambdaName}`;
     return new NodejsFunction(this.stack, lambdaId, {
-      entry: (join(__dirname, "..", "services", this.props.tableName, `${lambdaName}.ts`)), // create path dynamically for single lambda
-      handler: 'handler'
+      entry: join(
+        __dirname,
+        "..",
+        "services",
+        this.props.tableName,
+        `${lambdaName}.ts`
+      ), // create path dynamically for single lambda
+      handler: "handler",
+      functionName: lambdaId,
+      environment: {
+        TABLE_NAME: this.props.tableName,
+        PRIMARY_KEY: this.props.primaryKey,
+      },
     });
   }
 }
