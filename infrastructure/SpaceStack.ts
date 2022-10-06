@@ -4,7 +4,7 @@ import {
   Code,
   Function as LambdaFunction,
   Runtime,
-} from "aws-cdk-lib/aws-lambda"; // extend library fromcdk
+} from "aws-cdk-lib/aws-lambda"; // extend library from cdk
 import { join } from "path";
 import { LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { GenericTable } from "./GenericTable";
@@ -14,10 +14,13 @@ import { PolicyStatement } from "aws-cdk-lib/aws-iam";
 export class SpaceStack extends Stack {
   // private: only accessible within class
   private api = new RestApi(this, "SpaceApi");
+
   private spacesTable = new GenericTable(
-    'SpacesTable',
-    'spaceId',
-    this,
+    this, {
+      tableName: 'SpacesTable',
+      primaryKey: 'spaceId',
+      createLambdaPath: 'Create'
+    }
   )
 
   constructor(scope: Construct, id: string, props: StackProps) {
