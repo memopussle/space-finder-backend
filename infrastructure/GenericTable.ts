@@ -37,7 +37,7 @@ export class GenericTable {
   // make sure we initialize functions in order and organize our code
   private initialize() {
     this.createTable();
-    this.createLambdas(); // initialize lambdas and tables
+    this.createLambdas(); //initialize lambdas and tables
     this.grantTableRights();
   }
   private createTable() {
@@ -49,7 +49,6 @@ export class GenericTable {
       tableName: this.props.tableName,
     });
   }
-
   private createLambdas() {
     if (this.props.createLambdaPath) {
       this.createLambda = this.createSingleLambda(this.props.createLambdaPath);
@@ -69,7 +68,7 @@ export class GenericTable {
     }
   }
 
-  // grant the rights to lambda to access tables
+  //grant table access to ambda
   private grantTableRights() {
     if (this.createLambda) {
       this.table.grantWriteData(this.createLambda);

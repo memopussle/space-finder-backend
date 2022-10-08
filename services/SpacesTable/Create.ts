@@ -29,7 +29,8 @@ async function handler(
       })
       .promise();
   } catch (error) {
-    if (error instanceof Error) result.body = error.message;
+    // result.body = JSON.stringify({ message: error.message });
+        if (error instanceof Error) result.body = error.message;
   }
   result.body = JSON.stringify(`Created item with id: ${item.spaceId}`);
   return result;

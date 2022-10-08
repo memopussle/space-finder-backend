@@ -33,22 +33,21 @@ export class SpaceStack extends Stack {
       entry: join(__dirname, "..", "services", "node-lambda", "hello.ts"), //mapping hello.ts to SpaceStack.ts
       handler: "handler",
     });
- 
+
     // provide permissions to list for helloLambdaNodejs
     const s3ListPolicy = new PolicyStatement();
-    s3ListPolicy.addActions('s3:ListAllMyBuckets');
-    s3ListPolicy.addResources('*')
-    helloLambdaNodeJs.addToRolePolicy(s3ListPolicy)
+    s3ListPolicy.addActions("s3:ListAllMyBuckets");
+    s3ListPolicy.addResources("*");
+    helloLambdaNodeJs.addToRolePolicy(s3ListPolicy);
 
     // Hello Api lambda intergration:
     const helloLambdaIntergration = new LambdaIntegration(helloLambdaNodeJs); // link API Gateways and Lambda
-    const helloLambdaResource = this.api.root.addResource('hello'); 
-    helloLambdaResource.addMethod('GET', helloLambdaIntergration)
-  
+    const helloLambdaResource = this.api.root.addResource("hello");
+    helloLambdaResource.addMethod("GET", helloLambdaIntergration);
+
     //Spaces API intergrations:
-    const spaceResource = this.api.root.addResource('spaces');
-    spaceResource.addMethod('POST', this.spacesTable.createLambdaIntegration)
-  
+    const spaceResource = this.api.root.addResource("spaces");
+    spaceResource.addMethod("POST", this.spacesTable.createLambdaIntegration);
   }
 }
 
