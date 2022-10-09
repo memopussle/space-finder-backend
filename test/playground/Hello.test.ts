@@ -4,7 +4,7 @@ import { handler } from "../../services/SpacesTable/Read";
 
 const event: APIGatewayProxyEvent = {
   queryStringParameters: {
-    spaceId: "b9bbfcd3-0e80-43d8-8b47-8a3f120fe0c0",
+    location: "London",
   },
 } as any;
 
