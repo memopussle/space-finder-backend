@@ -21,19 +21,25 @@ async function handler(
 
   const spaceId = event.queryStringParameters?.[PRIMARY_KEY]; //?: only get queryStringParameters if it exists
 
-  if (spaceId) {
-    const deleteResult = await dbClient
-      .delete({
-        TableName: TABLE_NAME,
-        Key: {
-          [PRIMARY_KEY]: spaceId,
-        },
-      })
-      .promise();
+  try {
+ if (spaceId) {
+   const deleteResult = await dbClient
+     .delete({
+       TableName: TABLE_NAME,
+       Key: {
+         [PRIMARY_KEY]: spaceId,
+       },
+     })
+     .promise();
 
-    result.body = JSON.stringify(deleteResult);
+   result.body = JSON.stringify(deleteResult);
+ }
+
+  } catch (error) {
+   if (error instanceof Error)
+     result.body = JSON.stringify({ message: error.message });
   }
-
+ 
   return result;
 }
 export { handler };
