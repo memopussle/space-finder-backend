@@ -5,6 +5,10 @@ import {
   Context,
 } from "aws-lambda";
 import { v4 } from "uuid";
+import {
+  MissingFieldError,
+  validateAsSpaceEntry,
+} from "../Shared/InputValidator";
 
 const TABLE_NAME = process.env.TABLE_NAME;
 const dbClient = new DynamoDB.DocumentClient();
@@ -17,22 +21,32 @@ async function handler(
     statusCode: 200,
     body: "Hello from DYnamoDb",
   };
-  const item =
-    typeof event.body == "object" ? event.body : JSON.parse(event.body);
-  item.spaceId = v4();
 
   try {
+    const item =
+      typeof event.body == "object" ? event.body : JSON.parse(event.body);
+    item.spaceId = v4();
+
+    //validate the item value
+    validateAsSpaceEntry(item);
     await dbClient
       .put({
         TableName: TABLE_NAME!,
         Item: item,
       })
       .promise();
+    result.body = JSON.stringify(`Created item with id: ${item.spaceId}`);
   } catch (error) {
-    // result.body = JSON.stringify({ message: error.message });
-        if (error instanceof Error) result.body = error.message;
+    if (error instanceof MissingFieldError) {
+      result.statusCode = 403;
+    } else {
+      result.statusCode = 500;
+    }
+    // need to have if block -> prevent error breaks
+    if (error instanceof Error)
+      result.body = JSON.stringify({ message: error.message });
   }
-  result.body = JSON.stringify(`Created item with id: ${item.spaceId}`);
+
   return result;
 }
 export { handler };

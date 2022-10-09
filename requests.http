@@ -6,22 +6,28 @@ GET {{endpoint}}/hello/
 GET {{endpoint}}/spaces/
 ###
 
-PUT {{endpoint}}/spaces?spaceId=b9bbfcd3-0e80-43d8-8b47-8a3f120fe0c0
-Content-Type: application/application/json
+PUT {{endpoint}}/spaces?spaceId=20ccf2c7-3c78-4639-83df-9d48927c2a1f
+Content-Type: application/json
 
 {
-     "location": "Updated location",
+    "location": "New Zeeeeland"
 }
 ###
+
+
 
 GET {{endpoint}}/spaces?location=London
 ###
 
+
 POST {{endpoint}}/spaces/
-Content-Type: application/application/json
+Content-Type: application/json
 
 {
-    "location": "London",
-    "name": "Lovely Location"
+    "location": "Beijing",
+    "name": "China"
 }
+###
+
+DELETE {{endpoint}}/spaces?spaceId=29b3ca36-e22e-4be5-b386-f03f1d7fbdc9
 ###
