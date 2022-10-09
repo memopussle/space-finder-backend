@@ -85,7 +85,7 @@ export class GenericTable {
   }
 
   private createSingleLambda(lambdaName: string): NodejsFunction {
-    const lambdaId = `${this.props.tableName} ${lambdaName}`;
+    const lambdaId = `${this.props.tableName}-${lambdaName}`;
     return new NodejsFunction(this.stack, lambdaId, {
       entry: join(
         __dirname,
