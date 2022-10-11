@@ -1,34 +1,33 @@
 import { Stack, StackProps } from "aws-cdk-lib";
 import { Construct } from "constructs";
-import {
-  Code,
-  Function as LambdaFunction,
-  Runtime,
-} from "aws-cdk-lib/aws-lambda"; // extend library from cdk
+import { AuthorizerWrapper } from "./auth/AuthorizerWrapper";
 import { join } from "path";
-import { LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
+import { AuthorizationType, LambdaIntegration, MethodOptions, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { GenericTable } from "./GenericTable";
-import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
+import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { PolicyStatement } from "aws-cdk-lib/aws-iam";
+
 
 export class SpaceStack extends Stack {
   // private: only accessible within class
   private api = new RestApi(this, "SpaceApi");
+  private authorizer: AuthorizerWrapper;
 
-  private spacesTable = new GenericTable(
-    this, {
-      tableName: 'SpacesTable',
-      primaryKey: 'spaceId',
-      createLambdaPath: 'Create',
-      readLambdaPath: 'Read',
-      updateLambdaPath: 'Update',
-      deleteLambdaPath: 'Delete',
-      secondaryIndexes: ['location']
-    }
-  )
+  private spacesTable = new GenericTable(this, {
+    tableName: "SpacesTable",
+    primaryKey: "spaceId",
+    createLambdaPath: "Create",
+    readLambdaPath: "Read",
+    updateLambdaPath: "Update",
+    deleteLambdaPath: "Delete",
+    secondaryIndexes: ["location"],
+  });
 
   constructor(scope: Construct, id: string, props: StackProps) {
     super(scope, id, props);
+
+    // call AuthorizerWrapper
+    this.authorizer = new AuthorizerWrapper(this, this.api);
 
     // change the argument how the service is inherited
     // this: reference arguments in super. after are arguments passed in
@@ -44,17 +43,29 @@ export class SpaceStack extends Stack {
     s3ListPolicy.addResources("*");
     helloLambdaNodeJs.addToRolePolicy(s3ListPolicy);
 
+    //authorization
+    const optionsWithAuthorizer: MethodOptions = {
+      authorizationType: AuthorizationType.COGNITO,
+      authorizer: {
+        authorizerId: this.authorizer.authorizer.authorizerId
+      }
+    }
+
     // Hello Api lambda intergration:
     const helloLambdaIntergration = new LambdaIntegration(helloLambdaNodeJs); // link API Gateways and Lambda
     const helloLambdaResource = this.api.root.addResource("hello");
-    helloLambdaResource.addMethod("GET", helloLambdaIntergration);
+    helloLambdaResource.addMethod(
+      "GET",
+      helloLambdaIntergration,
+      optionsWithAuthorizer
+    ); // pass authorization to get hello method
 
     //Spaces API intergrations:
     const spaceResource = this.api.root.addResource("spaces");
     spaceResource.addMethod("POST", this.spacesTable.createLambdaIntegration);
-    spaceResource.addMethod('GET', this.spacesTable.readLambdaIntegration)
+    spaceResource.addMethod("GET", this.spacesTable.readLambdaIntegration);
     spaceResource.addMethod("PUT", this.spacesTable.updateLambdaIntegration);
-      spaceResource.addMethod("DELETE", this.spacesTable.deleteLambdaIntegration);
+    spaceResource.addMethod("DELETE", this.spacesTable.deleteLambdaIntegration);
   }
 }
 
