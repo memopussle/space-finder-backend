@@ -17,6 +17,7 @@ export class IdentityPoolWrapper {
   private scope: Construct;
   private userPool: UserPool;
   private userPoolClient: UserPoolClient;
+  private photoBucketArn: string; // type of photoBucket
 
   private identityPool: CfnIdentityPool;
 
@@ -28,11 +29,13 @@ export class IdentityPoolWrapper {
   constructor(
     scope: Construct,
     userPool: UserPool,
-    userPoolClient: UserPoolClient
+    userPoolClient: UserPoolClient,
+    photoBucketArn: string
   ) {
     this.scope = scope;
     this.userPool = userPool;
     this.userPoolClient = userPoolClient;
+    this.photoBucketArn = photoBucketArn; // call it in here to use it down in adminRole function
     this.initialize();
   }
 
@@ -119,8 +122,8 @@ export class IdentityPoolWrapper {
     this.adminRole.addToPolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
-        actions: ["s3:ListAllMyBuckets"], // allows admin to list all buckets action
-        resources: ["*"],
+        actions: ["s3:PutObject", "s3:PutObjectAcl"], // allows admin to edit object in bucket
+        resources: [this.photoBucketArn],
       })
     );
   }
@@ -129,10 +132,10 @@ export class IdentityPoolWrapper {
     new CfnIdentityPoolRoleAttachment(this.scope, "RolesAttachment", {
       identityPoolId: this.identityPool.ref,
       roles: {
-        'authenticated': this.authenticatedRole.roleArn,
-        'unauthenticated': this.unAuthenticatedRole.roleArn,
+        authenticated: this.authenticatedRole.roleArn,
+        unauthenticated: this.unAuthenticatedRole.roleArn,
       },
-      roleMappings: { 
+      roleMappings: {
         adminsMapping: {
           type: "Token",
           ambiguousRoleResolution: "AuthenticatedRole",

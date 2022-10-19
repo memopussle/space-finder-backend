@@ -5,6 +5,7 @@ import {
   Context,
 } from "aws-lambda";
 import { v4 } from "uuid";
+import { addCorsHeader } from "../Shared/Utils";
 
 const TABLE_NAME = process.env.TABLE_NAME as string; // as string fixes string | undefined suggestion -> TABLE_NAME: string
 const PRIMARY_KEY = process.env.PRIMARY_KEY as string;
@@ -18,23 +19,23 @@ async function handler(
     statusCode: 200,
     body: "Hello from DYnamoDb",
   };
-
-  const spaceId = event.queryStringParameters?.[PRIMARY_KEY]; //?: only get queryStringParameters if it exists
-
+ addCorsHeader(result);
+ 
   try {
- if (spaceId) {
-   const deleteResult = await dbClient
-     .delete({
-       TableName: TABLE_NAME,
-       Key: {
-         [PRIMARY_KEY]: spaceId,
-       },
-     })
-     .promise();
+    const spaceId = event.queryStringParameters?.[PRIMARY_KEY]; //?: only get queryStringParameters if it exists
 
-   result.body = JSON.stringify(deleteResult);
- }
+    if (spaceId) {
+      const deleteResult = await dbClient
+        .delete({
+          TableName: TABLE_NAME,
+          Key: {
+            [PRIMARY_KEY]: spaceId,
+          },
+        })
+        .promise();
 
+      result.body = JSON.stringify(deleteResult);
+    }
   } catch (error) {
    if (error instanceof Error)
      result.body = JSON.stringify({ message: error.message });

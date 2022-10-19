@@ -4,7 +4,7 @@ import {
   APIGatewayProxyResult,
   Context,
 } from "aws-lambda";
-import {generateRandomId, getEventBody} from "../Shared/Utils"
+import {generateRandomId, getEventBody, addCorsHeader} from "../Shared/Utils"
 import {
   MissingFieldError,
   validateAsSpaceEntry,
@@ -21,7 +21,7 @@ async function handler(
     statusCode: 200,
     body: "Hello from DYnamoDb",
   };
-
+ addCorsHeader(result)
   try {
     const item = getEventBody(event);
     item.spaceId = generateRandomId(); // generate random Id
@@ -34,7 +34,9 @@ async function handler(
         Item: item,
       })
       .promise();
-    result.body = JSON.stringify(`Created item with id: ${item.spaceId}`);
+    result.body = JSON.stringify({
+      id: item.spaceId
+    });
   } catch (error) {
     if (error instanceof MissingFieldError) {
       result.statusCode = 403;

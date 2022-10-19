@@ -5,6 +5,7 @@ import {
   APIGatewayProxyResult,
   Context,
 } from "aws-lambda";
+import { addCorsHeader } from "../Shared/Utils";
 
 const PRIMARY_KEY = process.env.PRIMARY_KEY;
 const TABLE_NAME = process.env.TABLE_NAME;
@@ -18,6 +19,7 @@ async function handler(
     statusCode: 200,
     body: "Hello from DYnamoDb",
   };
+   addCorsHeader(result);
   try {
     // if string parameters exists in document
 

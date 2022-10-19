@@ -4,7 +4,7 @@ import {
   APIGatewayProxyResult,
   Context,
 } from "aws-lambda";
-import { getEventBody } from "../Shared/Utils";
+import { addCorsHeader, getEventBody } from "../Shared/Utils";
 
 const TABLE_NAME = process.env.TABLE_NAME as string; // as string fixes string | undefined suggestion -> TABLE_NAME: string
 const PRIMARY_KEY = process.env.PRIMARY_KEY as string;
@@ -18,11 +18,12 @@ async function handler(
     statusCode: 200,
     body: "Hello from DYnamoDb",
   };
+  addCorsHeader(result);
 
-  // request body
-  const requestBody = getEventBody(event);
-  const spaceId = event.queryStringParameters?.[PRIMARY_KEY]; //?: only get queryStringParameters if it exists
   try {
+    // request body
+    const requestBody = getEventBody(event);
+    const spaceId = event.queryStringParameters?.[PRIMARY_KEY]; //?: only get queryStringParameters if it exists
     if (requestBody && spaceId) {
       //get the key from request body
       const requestBodyKey = Object.keys(requestBody)[0];
